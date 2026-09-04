@@ -41,8 +41,6 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  margin-bottom: 30px;
 }
 
 .logo {
@@ -57,6 +55,33 @@ header {
   color: var(--accent-color);
 }
 
+/* Tabs */
+.main-tabs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 10px;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 15px;
+  font-family: 'Outfit', sans-serif;
+  transition: var(--transition);
+}
+.tab-btn:hover {
+  color: var(--text-main);
+}
+.tab-btn.active {
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+}
+
 /* Categories */
 .category-filters {
   display: flex;
@@ -64,10 +89,10 @@ header {
   overflow-x: auto;
   padding-bottom: 15px;
   margin-bottom: 30px;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
 .category-filters::-webkit-scrollbar {
-  display: none; /* Safari/Chrome */
+  display: none;
 }
 
 .filter-btn {
@@ -188,4 +213,37 @@ header {
   padding: 4px 10px;
   border-radius: 4px;
   color: var(--accent-color);
+}
+
+/* 3D Lab */
+.lab-container { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+}
+.lab-controls { 
+  display: flex; 
+  gap: 10px; 
+  flex-wrap: wrap; 
+  background: var(--surface-color); 
+  padding: 15px; 
+  border-radius: var(--border-radius); 
+  border: 1px solid rgba(255,255,255,0.05); 
+}
+.canvas-wrapper { 
+  height: 60vh; 
+  width: 100%; 
+  border-radius: var(--border-radius); 
+  overflow: hidden; 
+  border: 1px solid rgba(255,255,255,0.1); 
+  background: #000; 
+  cursor: grab; 
+}
+.canvas-wrapper:active { 
+  cursor: grabbing; 
+}
+.lab-help { 
+  color: var(--text-muted); 
+  text-align: center; 
+  font-size: 0.9rem; 
 }

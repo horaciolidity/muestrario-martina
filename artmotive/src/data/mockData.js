@@ -1,30 +1,30 @@
 export const mockData = [
   {
     id: 1,
-    category: "poses",
-    title: "Salto Dinámico",
-    image: "/demo_pose.jpg",
-    explanation: "El salto dinámico en danza ilustra la línea de acción. Observa cómo la curva principal de la columna vertebral se extiende a través de la pierna estirada, creando fluidez. El uso del 'contrapposto' extremo ayuda a que la figura se vea en movimiento y no estática. Al dibujar esto, enfócate primero en la línea que va desde la punta de los dedos de la mano hasta la punta del pie trasero."
+    category: "formas",
+    title: "De Primitivas a Personaje",
+    image: "/anim_shapes.jpg",
+    explanation: "En animación, todo personaje complejo se puede desglosar en formas primitivas en 3D (esferas, cilindros, cubos). Esto es crucial para mantener la consistencia del volumen cuando el personaje rota en el espacio. Practica dibujando cajas y esferas en diferentes ángulos antes de agregar los detalles del rostro."
   },
   {
     id: 2,
-    category: "anatomia",
-    title: "Musculatura del Brazo",
-    image: "/demo_anatomy.jpg",
-    explanation: "El antebrazo humano está compuesto por múltiples músculos flexores y extensores. En esta referencia, nota la inserción del músculo braquiorradial y cómo los tendones se dirigen hacia los dedos a través del túnel carpiano. Entender estos volúmenes es clave para dibujar brazos que se sientan tridimensionales y funcionales, evitando el aspecto de 'tubo liso'."
+    category: "perspectiva",
+    title: "Grilla de Perspectiva (2 Puntos)",
+    image: "/anim_perspective.jpg",
+    explanation: "El paisajismo y los fondos ('backgrounds' o 'layouts') en animación dependen fuertemente de la perspectiva. Esta imagen muestra cómo se usa una perspectiva de dos puntos de fuga para crear una ciudad o escenario interior. Entender dónde ubicar la línea del horizonte dicta si la 'cámara' está a nivel del suelo, en picado o contrapicado."
   },
   {
     id: 3,
-    category: "paisajes",
-    title: "Perspectiva Atmosférica",
-    image: "/demo_landscape.jpg",
-    explanation: "Esta composición utiliza perspectiva atmosférica y líneas guía. El río actúa como una 'línea de liderazgo' (leading line) que guía la mirada del espectador directamente hacia el pico de la montaña. Además, las montañas en el fondo tienen menos contraste y detalles (perspectiva atmosférica), lo que crea ilusión de gran profundidad en una escena de diseño plano y minimalista."
+    category: "personajes",
+    title: "Model Sheet de Personaje",
+    image: "/anim_character.jpg",
+    explanation: "Para crear diseños de personajes útiles en animación, se utilizan 'Model Sheets'. Estas hojas de modelo muestran al personaje de frente, perfil, 3/4 y de espaldas, asegurando que cualquier animador del equipo dibuje las proporciones exactamente igual. Nota cómo el diseño se mantiene simple y con formas claras (Shape Language) para facilitar el movimiento continuo."
   }
 ];
 
 export const categories = [
   { id: "all", name: "Todo" },
-  { id: "poses", name: "Poses" },
-  { id: "anatomia", name: "Anatomía" },
-  { id: "paisajes", name: "Paisajes" }
+  { id: "formas", name: "Formas y Volúmenes" },
+  { id: "personajes", name: "Diseño de Personajes" },
+  { id: "perspectiva", name: "Perspectiva y Ambientes" }
 ];
