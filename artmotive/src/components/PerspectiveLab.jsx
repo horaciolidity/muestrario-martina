@@ -5,41 +5,42 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
-// Componente para la habitación de perspectiva
-function PerspectiveRoom() {
-  const gridProps = {
-    args: [40, 40],
-    cellSize: 1,
-    cellThickness: 1,
-    cellColor: "#4b5563",
-    sectionSize: 5,
-    sectionThickness: 1.5,
-    sectionColor: "#94a3b8",
-    fadeDistance: 40
-  };
+// Componente para un plano con rejilla
+function Wall({ position, rotation, gridColor, planeColor, visible }) {
+  if (!visible) return null;
+  return (
+    <group position={position} rotation={rotation}>
+      <Grid 
+        args={[40, 40]} 
+        cellSize={1} cellThickness={1} cellColor={gridColor} 
+        sectionSize={5} sectionThickness={1.5} sectionColor={gridColor} 
+        fadeDistance={40} 
+      />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+        <planeGeometry args={[40, 40]} />
+        <meshBasicMaterial color={planeColor} transparent opacity={0.15} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
 
+// Componente para la habitación de perspectiva interactiva
+function PerspectiveRoom({ walls }) {
   return (
     <group>
-      {/* Suelo */}
-      <Grid position={[0, -5, 0]} {...gridProps} />
-      {/* Techo */}
-      <Grid position={[0, 5, 0]} rotation={[Math.PI, 0, 0]} {...gridProps} />
-      {/* Pared Izquierda */}
-      <Grid position={[-10, 0, 0]} rotation={[0, 0, -Math.PI / 2]} {...gridProps} />
-      {/* Pared Derecha */}
-      <Grid position={[10, 0, 0]} rotation={[0, 0, Math.PI / 2]} {...gridProps} />
-      {/* Pared de Fondo */}
-      <Grid position={[0, 0, -10]} rotation={[Math.PI / 2, 0, 0]} {...gridProps} />
+      <Wall position={[0, -5, 0]} rotation={[0, 0, 0]} gridColor="#22c55e" planeColor="#4ade80" visible={walls.floor} />
+      <Wall position={[0, 5, 0]} rotation={[Math.PI, 0, 0]} gridColor="#eab308" planeColor="#fde047" visible={walls.ceiling} />
+      <Wall position={[-10, 0, 0]} rotation={[0, 0, -Math.PI / 2]} gridColor="#ef4444" planeColor="#f87171" visible={walls.left} />
+      <Wall position={[10, 0, 0]} rotation={[0, 0, Math.PI / 2]} gridColor="#3b82f6" planeColor="#60a5fa" visible={walls.right} />
+      <Wall position={[0, 0, -10]} rotation={[Math.PI / 2, 0, 0]} gridColor="#a855f7" planeColor="#c084fc" visible={walls.back} />
     </group>
   );
 }
 
 // Componente para un objeto interactivo
 function InteractiveObject({ obj, mode, activeId, setActiveId }) {
-  const meshRef = useRef();
   const isActive = activeId === obj.id;
 
-  // Render geometries based on type
   let content = null;
   if (obj.type === 'cube') {
     content = (
@@ -72,7 +73,7 @@ function InteractiveObject({ obj, mode, activeId, setActiveId }) {
   }
 
   return (
-    <group position={obj.position}>
+    <group position={obj.position} scale={obj.scale || [1,1,1]}>
       {isActive ? (
         <TransformControls mode={mode} makeDefault>
           {content}
@@ -86,17 +87,30 @@ function InteractiveObject({ obj, mode, activeId, setActiveId }) {
 
 export function PerspectiveLab() {
   const [objects, setObjects] = useState([]);
-  const [transformMode, setTransformMode] = useState('translate'); // 'translate' | 'scale'
+  const [transformMode, setTransformMode] = useState('translate');
   const [activeId, setActiveId] = useState(null);
+  
+  const [walls, setWalls] = useState({
+    floor: true,
+    ceiling: false,
+    left: true,
+    right: true,
+    back: true
+  });
+
+  const toggleWall = (key) => {
+    setWalls(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const addObject = (type) => {
     const newObj = {
       id: Date.now(),
       type,
       position: [0, 0, 0],
+      scale: [1, 1, 1],
       color: `hsl(${Math.random() * 360}, 70%, 60%)`
     };
-    setObjects([...objects, newObj]);
+    setObjects(prev => [...prev, newObj]);
     setActiveId(newObj.id);
   };
 
@@ -108,12 +122,12 @@ export function PerspectiveLab() {
     const ext = file.name.split('.').pop().toLowerCase();
 
     const onLoadCustom = (sceneData) => {
-      let sceneToUse = sceneData.scene || sceneData; // GLTF has .scene, OBJ is just a Group
-      
+      let sceneToUse = sceneData.scene || sceneData;
       const newObj = {
         id: Date.now(),
         type: 'custom',
         position: [0, 0, 0],
+        scale: [1, 1, 1],
         scene: sceneToUse.clone()
       };
       setObjects(prev => [...prev, newObj]);
@@ -122,54 +136,89 @@ export function PerspectiveLab() {
 
     if (ext === 'gltf' || ext === 'glb') {
       const loader = new GLTFLoader();
-      loader.load(url, onLoadCustom, undefined, (error) => console.error("Error loading GLTF:", error));
+      loader.load(url, onLoadCustom, undefined, (err) => console.error(err));
     } else if (ext === 'obj') {
       const loader = new OBJLoader();
-      loader.load(url, onLoadCustom, undefined, (error) => console.error("Error loading OBJ:", error));
-    } else {
-      alert("Formato no soportado. Por favor sube un archivo .gltf, .glb o .obj");
+      loader.load(url, onLoadCustom, undefined, (err) => console.error(err));
     }
   };
+
+  // Keyboard Controls
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!activeId) return;
+      
+      setObjects(prevObjects => prevObjects.map(obj => {
+        if (obj.id !== activeId) return obj;
+        
+        let newPos = [...obj.position];
+        let newScale = [...(obj.scale || [1,1,1])];
+        const step = 0.5;
+        const scaleStep = 0.1;
+
+        switch (e.key) {
+          case 'ArrowUp': newPos[2] -= step; break;
+          case 'ArrowDown': newPos[2] += step; break;
+          case 'ArrowLeft': newPos[0] -= step; break;
+          case 'ArrowRight': newPos[0] += step; break;
+          case 'w': case 'W': newPos[1] += step; break;
+          case 's': case 'S': newPos[1] -= step; break;
+          case '+': 
+            newScale = [newScale[0] + scaleStep, newScale[1] + scaleStep, newScale[2] + scaleStep];
+            break;
+          case '-': 
+            if (newScale[0] > 0.2) {
+              newScale = [newScale[0] - scaleStep, newScale[1] - scaleStep, newScale[2] - scaleStep];
+            }
+            break;
+          default: break;
+        }
+
+        return { ...obj, position: newPos, scale: newScale };
+      }));
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeId]);
 
   return (
     <div className="lab-container">
       <div className="lab-controls">
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', width: '100%' }}>
           <button className="filter-btn" onClick={() => addObject('cube')}>+ Cubo</button>
           <button className="filter-btn" onClick={() => addObject('sphere')}>+ Esfera</button>
           <button className="filter-btn" onClick={() => addObject('cylinder')}>+ Cilindro</button>
-          
           <label className="filter-btn" style={{ cursor: 'pointer', background: 'var(--accent-color)', color: 'white', borderColor: 'var(--accent-color)' }}>
-            + Importar Modelo (.gltf / .obj)
+            + Importar 3D
             <input type="file" accept=".gltf,.glb,.obj" style={{ display: 'none' }} onChange={handleFileUpload} />
           </label>
+          <button className="filter-btn" style={{ border: '1px solid #ef4444', marginLeft: 'auto' }} onClick={() => { setObjects([]); setActiveId(null); }}>Limpiar Todo</button>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <button 
-            className={`filter-btn ${transformMode === 'translate' ? 'active' : ''}`}
-            onClick={() => setTransformMode('translate')}
-          >
-            Modo: Mover
-          </button>
-          <button 
-            className={`filter-btn ${transformMode === 'scale' ? 'active' : ''}`}
-            onClick={() => setTransformMode('scale')}
-          >
-            Modo: Escalar
-          </button>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', width: '100%', alignItems: 'center' }}>
+          <span style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>Transformar (Mouse):</span>
+          <button className={`filter-btn ${transformMode === 'translate' ? 'active' : ''}`} onClick={() => setTransformMode('translate')}>Mover</button>
+          <button className={`filter-btn ${transformMode === 'scale' ? 'active' : ''}`} onClick={() => setTransformMode('scale')}>Escalar</button>
           
-          <button className="filter-btn" style={{ border: '1px solid #ef4444' }} onClick={() => { setObjects([]); setActiveId(null); }}>Limpiar Todo</button>
+          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)', margin: '0 10px' }}></div>
+          
+          <span style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>Paredes:</span>
+          <button className={`filter-btn ${walls.floor ? 'active' : ''}`} onClick={() => toggleWall('floor')}>Piso</button>
+          <button className={`filter-btn ${walls.ceiling ? 'active' : ''}`} onClick={() => toggleWall('ceiling')}>Techo</button>
+          <button className={`filter-btn ${walls.left ? 'active' : ''}`} onClick={() => toggleWall('left')}>Izq.</button>
+          <button className={`filter-btn ${walls.right ? 'active' : ''}`} onClick={() => toggleWall('right')}>Der.</button>
+          <button className={`filter-btn ${walls.back ? 'active' : ''}`} onClick={() => toggleWall('back')}>Fondo</button>
         </div>
       </div>
 
-      <div className="canvas-wrapper" onPointerMissed={() => setActiveId(null)}>
-        <Canvas camera={{ position: [5, 5, 10], fov: 60 }}>
+      <div className="canvas-wrapper" onPointerMissed={() => setActiveId(null)} tabIndex={0} style={{ outline: 'none' }}>
+        <Canvas camera={{ position: [10, 10, 15], fov: 50 }}>
           <ambientLight intensity={0.6} />
           <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow />
           <directionalLight position={[-10, 5, -10]} intensity={0.5} />
           
-          <PerspectiveRoom />
+          <PerspectiveRoom walls={walls} />
 
           {objects.map(obj => (
             <InteractiveObject 
@@ -181,15 +230,13 @@ export function PerspectiveLab() {
             />
           ))}
 
-          <OrbitControls 
-            makeDefault 
-            enableDamping
-            maxPolarAngle={Math.PI / 1.5} 
-          />
+          <OrbitControls makeDefault enableDamping maxPolarAngle={Math.PI / 1.1} />
           <Environment preset="city" />
         </Canvas>
       </div>
-      <p className="lab-help">Selecciona un objeto haciendo clic para usar los controles (flechas) de movimiento y escalado. Haz clic en el fondo para de-seleccionar.</p>
+      <p className="lab-help">
+        <strong>Selecciona un objeto.</strong> Teclado: <strong>Flechas</strong> = Frente/Atrás/Lados | <strong>W/S</strong> = Arriba/Abajo | <strong>+ / -</strong> = Escalar
+      </p>
     </div>
   );
 }
